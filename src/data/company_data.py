@@ -45,11 +45,13 @@ import numpy as np
 from scipy.stats import zscore
 
 sys.path.insert(0,str(Path(__file__).parent.parent))
-from constants import API_COMPANY_DATA_PATH, WINDOW_SIZE, DATA_PATH
+from constants import API_COMPANY_DATA_PATH, WINDOW_SIZE, DATA_PATH, TRAIN_TEST_SPLIT
 
-all_inputs = None
-all_labels = None
+all_inputs = []
+all_labels = []
 
+all_test_inputs = []
+all_test_labels = []
 
 def discard_for_api_error(data):
     if "Information" in data:
@@ -86,18 +88,23 @@ def make_data_frame(data, stock_name):
 def window_df(df):
     global all_inputs
     global all_labels
-    for i in range(df.shape[0] - WINDOW_SIZE-1):
+    global all_test_inputs
+    global all_test_labels
+
+    train_end_idx = int(TRAIN_TEST_SPLIT*df.shape[0])
+    for i in range(train_end_idx - WINDOW_SIZE-1):
         rows = df.iloc[i:i+WINDOW_SIZE+1]
         input = rows[0:WINDOW_SIZE].to_numpy()
-        input = np.reshape(input,(1,input.shape[0],input.shape[1]))
         label = rows[1:WINDOW_SIZE+1]["close"].to_numpy()
-        if all_inputs is None:
-            all_inputs = input
-            all_labels = label
-        else:
-            all_inputs = np.vstack((all_inputs,input))
-            all_labels = np.vstack((all_labels,label))
-        
+        all_inputs.append(input)
+        all_labels.append(label)
+    
+    for i in range(train_end_idx,df.shape[0]-WINDOW_SIZE-1):
+        rows = df.iloc[i:i+WINDOW_SIZE+1]
+        input = rows[0:WINDOW_SIZE].to_numpy()
+        label = rows[1:WINDOW_SIZE+1]["close"].to_numpy()
+        all_test_inputs.append(input)
+        all_test_labels.append(label)
 
 total_files = 0
 discarded_files = 0
@@ -112,11 +119,22 @@ for root, _, files in os.walk(API_COMPANY_DATA_PATH):
                 df = make_data_frame(data, file[:-5]) # removes the .json extension from file name
                 window_df(df)
                 
+                
+all_inputs = np.array(all_inputs)
+all_labels = np.array(all_labels)
+all_test_inputs = np.array(all_test_inputs)
+all_test_labels = np.array(all_test_labels)
 
-print(all_inputs.shape)
-print(all_labels.shape)
+print("train inputs: ",all_inputs.shape)
+print("train labels: ",all_labels.shape)
+print("test inputs: ",all_test_inputs.shape)
+print("test labels: ",all_test_labels.shape)
+
 np.save(DATA_PATH+"stock_inputs.npy",all_inputs)
 np.save(DATA_PATH+"stock_labels.npy",all_labels)
+
+np.save(DATA_PATH+"stock_test_inputs.npy",all_test_inputs)
+np.save(DATA_PATH+"stock_test_labels.npy",all_test_labels)
 
 
 print("total files: ",total_files)
