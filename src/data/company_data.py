@@ -80,7 +80,7 @@ def make_data_frame(data, stock_name):
     
     df.drop('date', axis=1, inplace=True)
     df = df.apply(zscore)
-    df['stock'] = stock_name
+    df['stock'] = stock_name # -1th index of covariates is the symbol of the stock
     df = df.reset_index(drop=True)
     return df
 
@@ -130,11 +130,11 @@ print("train labels: ",all_labels.shape)
 print("test inputs: ",all_test_inputs.shape)
 print("test labels: ",all_test_labels.shape)
 
-np.save(DATA_PATH+"stock_inputs.npy",all_inputs)
-np.save(DATA_PATH+"stock_labels.npy",all_labels)
+np.save(DATA_PATH+"\\stock_inputs.npy",all_inputs)
+np.save(DATA_PATH+"\\stock_labels.npy",all_labels)
 
-np.save(DATA_PATH+"stock_test_inputs.npy",all_test_inputs)
-np.save(DATA_PATH+"stock_test_labels.npy",all_test_labels)
+np.save(DATA_PATH+"\\stock_test_inputs.npy",all_test_inputs)
+np.save(DATA_PATH+"\\stock_test_labels.npy",all_test_labels)
 
 
 print("total files: ",total_files)
