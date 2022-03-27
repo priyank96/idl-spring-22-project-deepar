@@ -18,7 +18,7 @@ class TrainDataset(Dataset):
         return self.train_len
 
     def __getitem__(self, index):
-        return (self.data[index,:,:-1],int(self.data[index,0,-1]), self.label[index])
+        return (self.data[index,:,:-1],self.data[index,0,-1], self.label[index])
 
 class TestDataset(Dataset):
     def __init__(self):
