@@ -32,7 +32,7 @@ Operations performed:
     3. Normalize each column
     4. Iterate over the rows of this dataframe with a window size of n, moving down one row at a time.
     5. For each window make two numpy matrices of shape (n-1 x ):
-        1. Input: row 0 to n-1 with [month,day,open,low,high,close, company name]
+        1. Input: row 0 to n-1 with [month,day,open,low,high,close,volume,company name]
         2. Output: row 1 to n [close]
 '''
 from pathlib import Path
