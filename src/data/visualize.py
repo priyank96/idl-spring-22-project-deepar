@@ -7,6 +7,7 @@ Will the model learn to predict Gaussian distributions or Poisson distributions?
 The covariate variables are arranged as: 
 [month,day,open,low,high,close,volume, company name]
 '''
+import tqdm
 import numpy as np
 import pandas as pd
 from pathlib import Path
@@ -19,7 +20,7 @@ from constants import DATA_PATH
 def save_plot(data, covariate_column_index, out_file):
   column = np.reshape(test_data[:,:,covariate_column_index],(-1,1))
   df = pd.DataFrame(data=column)
-  fig = px.histogram(x=df[0],range_x=[-3,3])
+  fig = px.histogram(x=df[0],range_x=[df.min(),df.max()])
   fig.write_image(DATA_PATH+"/"+out_file)
 
 
@@ -30,10 +31,6 @@ if __name__ == '__main__':
   The covariate variables are arranged as: 
   [month,day,open,low,high,close, volume company name]
   '''
-  save_plot(test_data,2,"open.png")
-  save_plot(test_data,3,"low.png")
-  save_plot(test_data,4,"high.png")
-  save_plot(test_data,5,"close.png")
-  save_plot(test_data,6,"volume.png")
-
-
+  indices_and_file_names = [(2,"open.png"),(3,"low.png"),(4,"high.png"),(5,"close.png"),(6,"volume.png")]
+  for index, file_name in tqdm.tqdm(indices_and_file_names):
+    save_plot(test_data,index,file_name)
