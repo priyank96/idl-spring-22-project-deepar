@@ -61,6 +61,9 @@ def discard_for_api_error(data):
         return True
     return False
 
+def discard_for_df_error(df):
+  return df["volume"].isnull().any() or df["close"].isnull().any()
+
 def make_data_frame(data, stock_name):
     rows = []
     for day_data_key in data["Time Series (Daily)"]:
@@ -120,7 +123,7 @@ for root, _, files in os.walk(API_COMPANY_DATA_PATH):
                 discarded_files +=1
             else:
                 df = make_data_frame(data, file[:-5]) # removes the .json extension from file name
-                if (df["volume"]==0).all():
+                if discard_for_df_error(df):
                   discarded_files +=1
                   continue
                 window_df(df)
