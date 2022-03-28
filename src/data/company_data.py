@@ -43,6 +43,7 @@ import tqdm
 import pandas as pd
 import numpy as np
 from scipy.stats import zscore
+import pickle
 
 sys.path.insert(0,str(Path(__file__).parent.parent))
 from constants import API_COMPANY_DATA_PATH, WINDOW_SIZE, DATA_PATH, TRAIN_TEST_SPLIT
@@ -95,29 +96,53 @@ def window_df(df):
     for i in range(train_end_idx - WINDOW_SIZE-1):
         rows = df.iloc[i:i+WINDOW_SIZE+1]
         input = rows[0:WINDOW_SIZE].to_numpy()
-        label = rows[1:WINDOW_SIZE+1]["close"].to_numpy()
+        label = rows[1:WINDOW_SIZE+1]["open"].to_numpy()
         all_inputs.append(input)
         all_labels.append(label)
     
     for i in range(train_end_idx,df.shape[0]-WINDOW_SIZE-1):
         rows = df.iloc[i:i+WINDOW_SIZE+1]
         input = rows[0:WINDOW_SIZE].to_numpy()
-        label = rows[1:WINDOW_SIZE+1]["close"].to_numpy()
+        label = rows[1:WINDOW_SIZE+1]["open"].to_numpy()
         all_test_inputs.append(input)
         all_test_labels.append(label)
 
 total_files = 0
 discarded_files = 0
+company_names= set()
+i = 0
 for root, _, files in os.walk(API_COMPANY_DATA_PATH):
     for file in tqdm.tqdm(files):
-        with open(root+"\\"+file,'r') as f:
+        with open(root+"/"+file,'r') as f:
             data = json.load(f)
             total_files += 1
             if discard_for_api_error(data):
                 discarded_files +=1
             else:
                 df = make_data_frame(data, file[:-5]) # removes the .json extension from file name
+                if (df["volume"]==0).all():
+                  discarded_files +=1
+                  continue
                 window_df(df)
+                company_names.add(file[:-5])
+
+
+company_names = list(company_names)
+company_index = {}
+for i in range(len(company_names)):
+  company_index[company_names[i]] = i
+
+print(company_index)
+
+with open(DATA_PATH+"/company_names.pkl", "wb") as f:
+    pickle.dump(company_index, f)
+           
+
+
+
+
+
+
                 
                 
 all_inputs = np.array(all_inputs)
@@ -130,11 +155,11 @@ print("train labels: ",all_labels.shape)
 print("test inputs: ",all_test_inputs.shape)
 print("test labels: ",all_test_labels.shape)
 
-np.save(DATA_PATH+"\\stock_inputs.npy",all_inputs)
-np.save(DATA_PATH+"\\stock_labels.npy",all_labels)
+np.save(DATA_PATH+"/stock_inputs.npy",all_inputs)
+np.save(DATA_PATH+"/stock_labels.npy",all_labels)
 
-np.save(DATA_PATH+"\\stock_test_inputs.npy",all_test_inputs)
-np.save(DATA_PATH+"\\stock_test_labels.npy",all_test_labels)
+np.save(DATA_PATH+"/stock_test_inputs.npy",all_test_inputs)
+np.save(DATA_PATH+"/stock_test_labels.npy",all_test_labels)
 
 
 print("total files: ",total_files)
