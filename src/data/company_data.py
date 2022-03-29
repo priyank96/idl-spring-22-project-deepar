@@ -135,18 +135,10 @@ company_index = {}
 for i in range(len(company_names)):
   company_index[company_names[i]] = i
 
-print(company_index)
 
 with open(DATA_PATH+"/company_names.pkl", "wb") as f:
     pickle.dump(company_index, f)
            
-
-
-
-
-
-
-                
                 
 all_inputs = np.array(all_inputs)
 all_labels = np.array(all_labels)
