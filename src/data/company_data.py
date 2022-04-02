@@ -62,21 +62,28 @@ def discard_for_api_error(data):
     return False
 
 def discard_for_df_error(df):
-  return df["volume"].isnull().any() or df["close"].isnull().any()
+  return df["volume"].isnull().any() or df["open"].isnull().any()
 
 def make_data_frame(data, stock_name):
     rows = []
     for day_data_key in data["Time Series (Daily)"]:
         day_data = data["Time Series (Daily)"][day_data_key]
+        # rows.append([
+        #     day_data_key,
+        #     float(day_data["1. open"]), 
+        #     float(day_data["2. high"]),
+        #     float(day_data["3. low"]),
+        #     float(day_data["4. close"]),
+        #     float(day_data["5. volume"])
+        # ])
+
         rows.append([
             day_data_key,
-            float(day_data["1. open"]), 
-            float(day_data["2. high"]),
-            float(day_data["3. low"]),
-            float(day_data["4. close"]),
+            float(day_data["1. open"]),
             float(day_data["5. volume"])
         ])
-    df = pd.DataFrame(rows, columns=["date","open","high","low","close","volume"])
+    # df = pd.DataFrame(rows, columns=["date","open","high","low","close","volume"])
+    df = pd.DataFrame(rows, columns=["date","open","volume"])
     df["date"] = pd.to_datetime(df["date"],infer_datetime_format=True)
     df = df.sort_values(by="date")
     df['day'] = [d.day for d in df['date']]
