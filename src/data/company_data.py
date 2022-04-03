@@ -139,12 +139,23 @@ for file in tqdm.tqdm(files):
             company_to_index[file[:-5]] = company_name_index
             df = make_data_frame(data, company_name_index) 
             if discard_for_df_error(df):
+              # Remove mapping, so we don't access this company in the test set
+              del company_to_index[file[:-5]]
               discarded_files +=1
               continue
+
+            processed_rows = 0
             for input, label in window_df(df):
               all_inputs.append(input)
               all_labels.append(label)
-            company_name_index += 1
+              processed_rows += 1
+            
+            if processed_rows > 0:
+              company_name_index += 1
+            else:
+              # Remove mapping, so we don't access this company in the test set
+              del company_to_index[file[:-5]]
+              print(f"<W> No Rows Returned for {file[:-5]}. Not enough samples probably.")   
 
 print(index_to_company)
 with open(DATA_PATH+"/index_to_company.pkl", "wb") as f:
@@ -176,7 +187,11 @@ for file in tqdm.tqdm(files):
         if discard_for_api_error(data):
             discarded_files +=1
         else:
-            company_name_index = company_to_index[file[:-5]]
+            company_name_index = company_to_index.get(file[:-5], None)
+            if company_name_index is None:
+              print(f"Company Name {file[:-5]} not in Train Data. Hence skipping")
+              continue
+
             df = make_data_frame(data, company_name_index) # removes the .json extension from file name
             if discard_for_df_error(df):
               discarded_files +=1
