@@ -116,8 +116,10 @@ def window_df(df, train= True):
 
 total_files = 0
 discarded_files = 0
-company_name_dict = dict() 
-company_name_index = 0.0
+index_to_company = dict() 
+company_to_index = dict()
+
+company_name_index = 0
 i = 0
 
 root = None
@@ -133,7 +135,8 @@ for file in tqdm.tqdm(files):
         if discard_for_api_error(data):
             discarded_files +=1
         else:
-            company_name_dict[company_name_index] = file[:-5] # removes the .json extension from file name
+            index_to_company[company_name_index] = file[:-5] # removes the .json extension from file name
+            company_to_index[file[:-5]] = company_name_index
             df = make_data_frame(data, company_name_index) 
             if discard_for_df_error(df):
               discarded_files +=1
@@ -143,10 +146,14 @@ for file in tqdm.tqdm(files):
               all_labels.append(label)
             company_name_index += 1
 
-print(company_name_dict)
-with open(DATA_PATH+"/company_names.pkl", "wb") as f:
-    pickle.dump(company_name_dict, f)
-del company_name_dict
+print(index_to_company)
+with open(DATA_PATH+"/index_to_company.pkl", "wb") as f:
+    pickle.dump(index_to_company, f)
+
+print(index_to_company)
+with open(DATA_PATH+"/company_to_index.pkl", "wb") as f:
+    pickle.dump(company_to_index, f)
+
 gc.collect()
 
 all_labels = np.array(all_labels)
@@ -169,6 +176,7 @@ for file in tqdm.tqdm(files):
         if discard_for_api_error(data):
             discarded_files +=1
         else:
+            company_name_index = company_to_index[file[:-5]]
             df = make_data_frame(data, company_name_index) # removes the .json extension from file name
             if discard_for_df_error(df):
               discarded_files +=1
