@@ -150,7 +150,7 @@ print(index_to_company)
 with open(DATA_PATH+"/index_to_company.pkl", "wb") as f:
     pickle.dump(index_to_company, f)
 
-print(index_to_company)
+print(company_to_index)
 with open(DATA_PATH+"/company_to_index.pkl", "wb") as f:
     pickle.dump(company_to_index, f)
 
