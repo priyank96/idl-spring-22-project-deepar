@@ -44,6 +44,7 @@ import pandas as pd
 import numpy as np
 from scipy.stats import zscore
 import pickle
+import gc
 
 sys.path.insert(0,str(Path(__file__).parent.parent))
 from constants import API_COMPANY_DATA_PATH, WINDOW_SIZE, DATA_PATH, TRAIN_TEST_SPLIT
@@ -62,21 +63,29 @@ def discard_for_api_error(data):
     return False
 
 def discard_for_df_error(df):
-  return df["volume"].isnull().any() or df["close"].isnull().any()
+  return df["volume"].isnull().any() or df["open"].isnull().any()
 
-def make_data_frame(data, stock_name):
+def make_data_frame(data, stock_index):
     rows = []
     for day_data_key in data["Time Series (Daily)"]:
         day_data = data["Time Series (Daily)"][day_data_key]
+        # rows.append([
+        #     day_data_key,
+        #     float(day_data["1. open"]), 
+        #     float(day_data["2. high"]),
+        #     float(day_data["3. low"]),
+        #     float(day_data["4. close"]),
+        #     float(day_data["5. volume"])
+        # ])
+
         rows.append([
             day_data_key,
-            float(day_data["1. open"]), 
-            float(day_data["2. high"]),
-            float(day_data["3. low"]),
-            float(day_data["4. close"]),
+            float(day_data["1. open"]),
             float(day_data["5. volume"])
         ])
-    df = pd.DataFrame(rows, columns=["date","open","high","low","close","volume"])
+    # df = pd.DataFrame(rows, columns=["date","open","high","low","close","volume"])
+    df = pd.DataFrame(rows, columns=["date","open","volume"])
+    del rows
     df["date"] = pd.to_datetime(df["date"],infer_datetime_format=True)
     df = df.sort_values(by="date")
     df['day'] = [d.day for d in df['date']]
@@ -84,78 +93,102 @@ def make_data_frame(data, stock_name):
     
     df.drop('date', axis=1, inplace=True)
     df = df.apply(zscore)
-    df['stock'] = stock_name # -1th index of covariates is the symbol of the stock
+    df['stock'] = stock_index # -1th index of covariates is the symbol of the stock
     df = df.reset_index(drop=True)
     return df
 
 
-def window_df(df):
-    global all_inputs
-    global all_labels
-    global all_test_inputs
-    global all_test_labels
-
+def window_df(df, train= True):
     train_end_idx = int(TRAIN_TEST_SPLIT*df.shape[0])
-    for i in range(train_end_idx - WINDOW_SIZE-1):
-        rows = df.iloc[i:i+WINDOW_SIZE+1]
-        input = rows[0:WINDOW_SIZE].to_numpy()
-        label = rows[1:WINDOW_SIZE+1]["open"].to_numpy()
-        all_inputs.append(input)
-        all_labels.append(label)
-    
-    for i in range(train_end_idx,df.shape[0]-WINDOW_SIZE-1):
-        rows = df.iloc[i:i+WINDOW_SIZE+1]
-        input = rows[0:WINDOW_SIZE].to_numpy()
-        label = rows[1:WINDOW_SIZE+1]["open"].to_numpy()
-        all_test_inputs.append(input)
-        all_test_labels.append(label)
+    if train:
+      for i in range(train_end_idx - WINDOW_SIZE-1):
+          rows = df.iloc[i:i+WINDOW_SIZE+1]
+          input = rows[0:WINDOW_SIZE]
+          label = rows[1:WINDOW_SIZE+1]["open"]
+          yield input,label
+          
+    else:
+      for i in range(train_end_idx,df.shape[0]-WINDOW_SIZE-1):
+          rows = df.iloc[i:i+WINDOW_SIZE+1]
+          input = rows[0:WINDOW_SIZE]
+          label = rows[1:WINDOW_SIZE+1]["open"]
+          yield input,label
 
 total_files = 0
 discarded_files = 0
-company_names= set()
+company_name_dict = dict() 
+company_name_index = 0.0
 i = 0
-for root, _, files in os.walk(API_COMPANY_DATA_PATH):
-    for file in tqdm.tqdm(files):
-        with open(root+"/"+file,'r') as f:
-            data = json.load(f)
-            total_files += 1
-            if discard_for_api_error(data):
-                discarded_files +=1
-            else:
-                df = make_data_frame(data, file[:-5]) # removes the .json extension from file name
-                if discard_for_df_error(df):
-                  discarded_files +=1
-                  continue
-                window_df(df)
-                company_names.add(file[:-5])
 
+root = None
+files = None
+for r, _, f in os.walk(API_COMPANY_DATA_PATH):
+  root = r
+  files = f
 
-company_names = list(company_names)
-company_index = {}
-for i in range(len(company_names)):
-  company_index[company_names[i]] = i
+for file in tqdm.tqdm(files):
+    with open(root+"/"+file,'r') as f:
+        data = json.load(f)
+        total_files += 1
+        if discard_for_api_error(data):
+            discarded_files +=1
+        else:
+            company_name_dict[company_name_index] = file[:-5] # removes the .json extension from file name
+            df = make_data_frame(data, company_name_index) 
+            if discard_for_df_error(df):
+              discarded_files +=1
+              continue
+            for input, label in window_df(df):
+              all_inputs.append(input)
+              all_labels.append(label)
+            company_name_index += 1
 
-
+print(company_name_dict)
 with open(DATA_PATH+"/company_names.pkl", "wb") as f:
-    pickle.dump(company_index, f)
-           
+    pickle.dump(company_name_dict, f)
+del company_name_dict
+gc.collect()
+
+all_labels = np.array(all_labels)
+print("train labels: ",all_labels.shape)
+np.save(DATA_PATH+"/stock_labels.npy",all_labels)
+del all_labels
+gc.collect()
                 
 all_inputs = np.array(all_inputs)
-all_labels = np.array(all_labels)
-all_test_inputs = np.array(all_test_inputs)
-all_test_labels = np.array(all_test_labels)
-
 print("train inputs: ",all_inputs.shape)
-print("train labels: ",all_labels.shape)
-print("test inputs: ",all_test_inputs.shape)
-print("test labels: ",all_test_labels.shape)
-
 np.save(DATA_PATH+"/stock_inputs.npy",all_inputs)
-np.save(DATA_PATH+"/stock_labels.npy",all_labels)
+del all_inputs
+gc.collect()
 
-np.save(DATA_PATH+"/stock_test_inputs.npy",all_test_inputs)
+
+for file in tqdm.tqdm(files):
+    with open(root+"/"+file,'r') as f:
+        data = json.load(f)
+        total_files += 1
+        if discard_for_api_error(data):
+            discarded_files +=1
+        else:
+            df = make_data_frame(data, company_name_index) # removes the .json extension from file name
+            if discard_for_df_error(df):
+              discarded_files +=1
+              continue
+            for input, label in window_df(df,False):
+              all_test_inputs.append(input)
+              all_test_labels.append(label)
+            
+
+all_test_labels = np.array(all_test_labels)
+print("test labels: ",all_test_labels.shape)
 np.save(DATA_PATH+"/stock_test_labels.npy",all_test_labels)
-
+del all_test_labels
+gc.collect()
+                
+all_test_inputs = np.array(all_test_inputs)
+print("test inputs: ",all_test_inputs.shape)
+np.save(DATA_PATH+"/stock_test_inputs.npy",all_test_inputs)
+del all_test_inputs
+gc.collect()
 
 print("total files: ",total_files)
 print("discarded files: ", discarded_files)
