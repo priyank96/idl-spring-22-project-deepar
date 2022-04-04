@@ -47,7 +47,7 @@ import pickle
 import gc
 
 sys.path.insert(0,str(Path(__file__).parent.parent))
-from constants import API_COMPANY_DATA_PATH, WINDOW_SIZE, DATA_PATH, TRAIN_TEST_SPLIT, NUM_COMPANIES_TO_PROCESS, TARGET_COMPANIES
+from constants import API_COMPANY_DATA_PATH, WINDOW_SIZE, DATA_PATH, TRAIN_TEST_SPLIT, TARGET_COMPANIES
 
 all_inputs = []
 all_labels = []
@@ -160,9 +160,7 @@ for file in tqdm.tqdm(files):
               # Remove mapping, so we don't access this company in the test set
               del company_to_index[file[:-5]]
               print(f"<W> No Rows Returned for {file[:-5]}. Not enough samples probably.")   
-    
-    if total_files > 100:
-      break
+
 
 
 print(index_to_company)
