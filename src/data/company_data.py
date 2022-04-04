@@ -47,7 +47,7 @@ import pickle
 import gc
 
 sys.path.insert(0,str(Path(__file__).parent.parent))
-from constants import API_COMPANY_DATA_PATH, WINDOW_SIZE, DATA_PATH, TRAIN_TEST_SPLIT, NUM_COMPANIES_TO_PROCESS
+from constants import API_COMPANY_DATA_PATH, WINDOW_SIZE, DATA_PATH, TRAIN_TEST_SPLIT, NUM_COMPANIES_TO_PROCESS, TARGET_COMPANIES
 
 all_inputs = []
 all_labels = []
@@ -128,8 +128,12 @@ for r, _, f in os.walk(API_COMPANY_DATA_PATH):
   root = r
   files = f
 
+if TARGET_COMPANIES:
+  files = [file + '.json' for file in TARGET_COMPANIES]
+
 for file in tqdm.tqdm(files):
     with open(root+"/"+file,'r') as f:
+
         data = json.load(f)
         total_files += 1
         if discard_for_api_error(data):
@@ -157,7 +161,7 @@ for file in tqdm.tqdm(files):
               del company_to_index[file[:-5]]
               print(f"<W> No Rows Returned for {file[:-5]}. Not enough samples probably.")   
     
-    if total_files > NUM_COMPANIES_TO_PROCESS:
+    if total_files > 100:
       break
 
 
@@ -192,6 +196,7 @@ for file in tqdm.tqdm(files):
             discarded_files +=1
         else:
             company_name_index = company_to_index.get(file[:-5], None)
+
             if company_name_index is None:
               print(f"Company Name {file[:-5]} not in Train Data. Hence skipping")
               continue
