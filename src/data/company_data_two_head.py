@@ -69,21 +69,13 @@ def make_data_frame(data, stock_index):
     rows = []
     for day_data_key in data["Time Series (Daily)"]:
         day_data = data["Time Series (Daily)"][day_data_key]
-        # rows.append([
-        #     day_data_key,
-        #     float(day_data["1. open"]), 
-        #     float(day_data["2. high"]),
-        #     float(day_data["3. low"]),
-        #     float(day_data["4. close"]),
-        #     float(day_data["5. volume"])
-        # ])
 
         rows.append([
             day_data_key,
             float(day_data["1. open"]),
             float(day_data["5. volume"])
         ])
-    # df = pd.DataFrame(rows, columns=["date","open","high","low","close","volume"])
+    
     df = pd.DataFrame(rows, columns=["date","open","volume"])
     del rows
     df["date"] = pd.to_datetime(df["date"],infer_datetime_format=True)
@@ -104,14 +96,14 @@ def window_df(df, train= True):
       for i in range(train_end_idx - WINDOW_SIZE-1):
           rows = df.iloc[i:i+WINDOW_SIZE+1]
           input = rows[0:WINDOW_SIZE]
-          label = rows[1:WINDOW_SIZE+1]["open"]
+          label = rows[1:WINDOW_SIZE+1][["open","volume"]]
           yield input,label
           
     else:
       for i in range(train_end_idx,df.shape[0]-WINDOW_SIZE-1):
           rows = df.iloc[i:i+WINDOW_SIZE+1]
           input = rows[0:WINDOW_SIZE]
-          label = rows[1:WINDOW_SIZE+1]["open"]
+          label = rows[1:WINDOW_SIZE+1][["open","volume"]]
           yield input,label
 
 total_files = 0
@@ -161,11 +153,6 @@ for file in tqdm.tqdm(files):
               del company_to_index[file[:-5]]
               print(f"<W> No Rows Returned for {file[:-5]}. Not enough samples probably.")   
 
-root = None
-files = None
-for r, _, f in os.walk(API_COMPANY_DATA_PATH):
-  root = r
-  files = f
 
 
 print(index_to_company)
