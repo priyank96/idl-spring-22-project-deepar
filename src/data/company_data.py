@@ -47,7 +47,7 @@ import pickle
 import gc
 
 sys.path.insert(0,str(Path(__file__).parent.parent))
-from constants import API_COMPANY_DATA_PATH, WINDOW_SIZE, DATA_PATH, TRAIN_TEST_SPLIT
+from constants import API_COMPANY_DATA_PATH, WINDOW_SIZE, DATA_PATH, TRAIN_TEST_SPLIT, TARGET_COMPANIES
 
 all_inputs = []
 all_labels = []
@@ -116,8 +116,10 @@ def window_df(df, train= True):
 
 total_files = 0
 discarded_files = 0
-company_name_dict = dict() 
-company_name_index = 0.0
+index_to_company = dict() 
+company_to_index = dict()
+
+company_name_index = 0
 i = 0
 
 root = None
@@ -126,27 +128,54 @@ for r, _, f in os.walk(API_COMPANY_DATA_PATH):
   root = r
   files = f
 
+if TARGET_COMPANIES:
+  files = [file + '.json' for file in TARGET_COMPANIES]
+
 for file in tqdm.tqdm(files):
     with open(root+"/"+file,'r') as f:
+
         data = json.load(f)
         total_files += 1
         if discard_for_api_error(data):
             discarded_files +=1
         else:
-            company_name_dict[company_name_index] = file[:-5] # removes the .json extension from file name
+            index_to_company[company_name_index] = file[:-5] # removes the .json extension from file name
+            company_to_index[file[:-5]] = company_name_index
             df = make_data_frame(data, company_name_index) 
             if discard_for_df_error(df):
+              # Remove mapping, so we don't access this company in the test set
+              del company_to_index[file[:-5]]
               discarded_files +=1
               continue
+
+            processed_rows = 0
             for input, label in window_df(df):
               all_inputs.append(input)
               all_labels.append(label)
-            company_name_index += 1
+              processed_rows += 1
+            
+            if processed_rows > 0:
+              company_name_index += 1
+            else:
+              # Remove mapping, so we don't access this company in the test set
+              del company_to_index[file[:-5]]
+              print(f"<W> No Rows Returned for {file[:-5]}. Not enough samples probably.")   
 
-print(company_name_dict)
-with open(DATA_PATH+"/company_names.pkl", "wb") as f:
-    pickle.dump(company_name_dict, f)
-del company_name_dict
+root = None
+files = None
+for r, _, f in os.walk(API_COMPANY_DATA_PATH):
+  root = r
+  files = f
+
+
+print(index_to_company)
+with open(DATA_PATH+"/index_to_company.pkl", "wb") as f:
+    pickle.dump(index_to_company, f)
+
+print(company_to_index)
+with open(DATA_PATH+"/company_to_index.pkl", "wb") as f:
+    pickle.dump(company_to_index, f)
+
 gc.collect()
 
 all_labels = np.array(all_labels)
@@ -169,6 +198,12 @@ for file in tqdm.tqdm(files):
         if discard_for_api_error(data):
             discarded_files +=1
         else:
+            company_name_index = company_to_index.get(file[:-5], None)
+
+            if company_name_index is None:
+              print(f"Company Name {file[:-5]} not in Train Data. Hence skipping")
+              continue
+
             df = make_data_frame(data, company_name_index) # removes the .json extension from file name
             if discard_for_df_error(df):
               discarded_files +=1
@@ -194,4 +229,3 @@ print("total files: ",total_files)
 print("discarded files: ", discarded_files)
 print("Well formed files: ",total_files-discarded_files)
             
-
