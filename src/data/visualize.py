@@ -33,11 +33,11 @@ if __name__ == '__main__':
   The covariate variables are arranged as: 
   [open,volume,...]
   '''
-  indices_and_file_names = [(0,"open.png"),(1,"volume.png")]
+  
   for company in tqdm.tqdm(TARGET_COMPANIES):
     df = pd.read_csv(COMPANY_DATA_PATH+'/'+company+'.csv')
-    save_plot_df(df,0,'open_'+company+'.png')
-    save_plot_df(df,1,'volume_'+company+'.png')
+    save_plot_df(df,'open','open_'+company+'.png')
+    save_plot_df(df,'volume','volume_'+company+'.png')
   
   
   
@@ -46,6 +46,7 @@ if __name__ == '__main__':
   
   '''
   '''
+  indices_and_file_names = [(0,"open.png"),(1,"volume.png")]
   test_data = np.load(DATA_PATH + '/stock_inputs.npy', allow_pickle=True)
   print(test_data.shape)
   for index, file_name in tqdm.tqdm(indices_and_file_names):
