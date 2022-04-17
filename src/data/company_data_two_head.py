@@ -84,7 +84,7 @@ def make_data_frame(data, stock_index):
     df['month'] = [d.month for d in df['date']]
     
     df.drop('date', axis=1, inplace=True)
-    df = df.apply(zscore)
+    df = df.apply(np.log)
     df['stock'] = stock_index # -1th index of covariates is the symbol of the stock
     df = df.reset_index(drop=True)
     return df
