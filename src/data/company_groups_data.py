@@ -87,6 +87,8 @@ def window_df(df, train= True, num_companies=5):
     column_names = []
     for i in range(num_companies):
       column_names.append(str(i)+"_open")
+
+    for i in range(num_companies):
       column_names.append(str(i)+"_volume")
     if train:
       for i in range(train_end_idx - WINDOW_SIZE-1):
@@ -151,6 +153,8 @@ if __name__ =='__main__':
   column_names = ['month','day']
   for i in range(num_companies):
     column_names.append(str(i)+"_open")
+
+  for i in range(num_companies):
     column_names.append(str(i)+"_volume")
 
   df_final = reduce(lambda left,right: pd.merge(left,right,on=['date','day','month']), dfs)
