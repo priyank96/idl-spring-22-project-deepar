@@ -80,8 +80,8 @@ def make_data_frame(data, stock_index):
 
         rows.append([
             day_data_key,
-            float(day_data["1. open"]),
-            float(day_data["5. volume"])
+            float(np.log(day_data["1. open"])),
+            np.log(float(day_data["5. volume"]) + 1)
         ])
     # df = pd.DataFrame(rows, columns=["date","open","high","low","close","volume"])
     df = pd.DataFrame(rows, columns=["date","open","volume"])
