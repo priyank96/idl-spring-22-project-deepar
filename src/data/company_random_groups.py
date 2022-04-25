@@ -107,17 +107,23 @@ if __name__ == '__main__':
     # Num rows is suggestion. It guarantees min number of rows , not max
     parser.add_argument("-r","--num_rows",help="Number of training rows")
     parser.add_argument("-w","--window_size",help="Number of time steps in a window")
+    parser.add_argument("-seed","--seed_number",help="Seed for Randomness reproducibility", default=0)
+
     args = parser.parse_args()
 
     group_size = int(args.group_size)
     num_rows = int(args.num_rows)
     window_size = int(args.window_size)
+    seed = int(args.seed_number)
 
     total_rows = 0
     all_inputs = []
     all_labels = []
     all_test_inputs = []
     all_test_labels = []
+
+    random.seed(a=seed, version=2)
+
 
     while total_rows < num_rows:
         print('total rows: ',total_rows)
