@@ -133,7 +133,10 @@ if __name__ == '__main__':
         df = make_data_frame(companies,sector)
         #  see if it has at least window size rows
         if len(df) < window_size:
-            continue
+          continue
+        if df.isna().values.any():
+          print("found nans")
+          continue
         # Window this df and add to test and train npy arrays
         for input, label in window_df(df,window_size,True):
             all_inputs.append(input)
