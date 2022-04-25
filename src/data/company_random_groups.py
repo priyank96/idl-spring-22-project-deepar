@@ -48,10 +48,10 @@ def _rename_columns(df:pd.DataFrame,i):
     i = str(i)
     rename_map = {
         'open' : i + '_open',
-        'high' : i + '_high',
-        'low' : i + '_low',
-        'close' : i + '_close',
-        'volume' : i + '_volume',
+        # 'high' : i + '_high',
+        # 'low' : i + '_low',
+        # 'close' : i + '_close',
+        # 'volume' : i + '_volume',
         'name' : i + '_name'
     }
     df.rename(columns=rename_map, inplace=True)
@@ -68,6 +68,7 @@ def make_data_frame(company_names, sector_name):
     dfs = []
     for i, company_name in enumerate(company_names):
         df = pd.read_csv(os.path.join(COMPANY_DATA_PATH,company_name+'.csv'))
+        df = df[['date','open']]
         df["name"] = company_name
         
         
@@ -78,8 +79,8 @@ def make_data_frame(company_names, sector_name):
         df["date"] = pd.to_datetime(df["date"],infer_datetime_format=True)
         df = df.sort_values(by="date")
         #  Data transformations
-        df[['open','low','high','close','volume']] = df[['open','low','high','close','volume']].apply(np.log)
-        df[['open','low','high','close','volume']] = df[['open','low','high','close','volume']].apply(zscore)
+        df[['open']] = df[['open']].apply(np.log)
+        df[['open']] = df[['open']].apply(zscore)
         
         #  Rename columns so we can join
         df = _rename_columns(df,i)
@@ -128,7 +129,6 @@ if __name__ == '__main__':
             sector = random.choice(keys)
         
         companies = random.sample(population=sector_company_map[sector],k=group_size)
-        print(companies)
         #  make the dataframe
         df = make_data_frame(companies,sector)
         #  see if it has at least window size rows
@@ -142,7 +142,7 @@ if __name__ == '__main__':
         for input, label in window_df(df,window_size,False):
             all_test_inputs.append(input)
             all_test_labels.append(label)
-    
+    print(df.info())
     # Start saving things
     print(index_to_company)
     with open(DATA_PATH+"/index_to_company.pkl", "wb") as f:
@@ -155,18 +155,19 @@ if __name__ == '__main__':
     all_labels = np.array(all_labels)
     print("train labels: ",all_labels.shape)
     np.save(DATA_PATH+"/stock_labels.npy",all_labels)
-    
+    del all_labels
                     
     all_inputs = np.array(all_inputs)
     print("train inputs: ",all_inputs.shape)
     np.save(DATA_PATH+"/stock_inputs.npy",all_inputs)
-    
+    del all_inputs
+
     all_test_labels = np.array(all_test_labels)
     print("test labels: ",all_test_labels.shape)
     np.save(DATA_PATH+"/stock_test_labels.npy",all_test_labels)
-    
+    del all_test_labels
                     
     all_test_inputs = np.array(all_test_inputs)
     print("test inputs: ",all_test_inputs.shape)
     np.save(DATA_PATH+"/stock_test_inputs.npy",all_test_inputs)
-    
+    del all_test_inputs
