@@ -13,7 +13,6 @@ from pathlib import Path
 
 sys.path.insert(0,str(Path(__file__).parent.parent))
 from constants import DATA_PATH, COMPANY_DATA_PATH, TRAIN_TEST_SPLIT
-COMPANY_DATA_PATH='C:\\Users\\priya\\Documents\\IDL\\Project\\data\\company_data'
 
 company_name_index = 0
 
@@ -21,7 +20,6 @@ index_to_company = dict()
 company_to_index = dict()
 sector_company_map = dict()
 
-DATA_PATH = 'C:\\Users\\priya\\Documents\\IDL\\Project\\data'
 with open(os.path.join(DATA_PATH,'sectors.csv'),'r') as op:
     csv_reader = csv.reader(op) 
     for row in csv_reader:
