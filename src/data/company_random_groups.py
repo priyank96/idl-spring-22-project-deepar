@@ -122,7 +122,7 @@ if __name__ == '__main__':
     all_test_inputs = []
     all_test_labels = []
 
-    random.seed(a=seed, version=2)
+    random.seed(a=None, version=2)
 
 
     while total_rows < num_rows:
@@ -160,6 +160,10 @@ if __name__ == '__main__':
     print(company_to_index)
     with open(DATA_PATH+"/company_to_index.pkl", "wb") as f:
         pickle.dump(company_to_index, f)
+
+    print(sector_company_map)
+    with open(DATA_PATH+"/sector_company_map.pkl", "wb") as f:
+        pickle.dump(sector_company_map, f)
     
     all_labels = np.array(all_labels)
     print("train labels: ",all_labels.shape)
