@@ -131,6 +131,8 @@ for r, _, f in os.walk(API_COMPANY_DATA_PATH):
 if TARGET_COMPANIES:
   files = [file + '.json' for file in TARGET_COMPANIES]
 
+files = sorted(files)
+
 for file in tqdm.tqdm(files):
     with open(root+"/"+file,'r') as f:
 
