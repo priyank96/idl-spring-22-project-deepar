@@ -6,5 +6,5 @@
 
 
 ## Scripts for data preparation
-1. company_data.py - To process data and generate windowed time series. 
+1. [company_data.py](https://github.com/priyank96/idl-spring-22-project-deepar/blob/main/src/data/company_data.py) - To process data and generate windowed time series. 
 2. company_groups_data.py - To process data and generate windowed time series for grouped vector inputs.
