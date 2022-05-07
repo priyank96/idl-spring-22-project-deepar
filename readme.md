@@ -10,7 +10,7 @@
 Note: The appropriate data generation scripts are executed by the appropriate notebooks below
 
 ## Link to respective notebooks
-1. [Baseline](https://github.com/priyank96/idl-spring-22-project-deepar/blob/main/python_notebooks/Single_Company/DL_192Win_DeepAR_Baseline.ipynb) 
+1. [DeepAR Baseline](https://github.com/priyank96/idl-spring-22-project-deepar/blob/main/python_notebooks/Single_Company/DL_192Win_DeepAR_Baseline.ipynb) 
 2. [Higher Autoregressive Context](https://github.com/priyank96/idl-spring-22-project-deepar/blob/main/python_notebooks/Single_Company/DL_192WinLen_Context.ipynb) 
 3. [Deeper Horizon Weighted Loss](https://github.com/priyank96/idl-spring-22-project-deepar/blob/main/python_notebooks/Single_Company/DL_192WinLen_WeightLoss.ipynb) 
 4. [Grouped Vector Input](https://github.com/priyank96/idl-spring-22-project-deepar/blob/main/python_notebooks/Vector_Group_Inputs/DL_192Vectors_Group_Data_SectorEmbed_Normal_Loss.ipynb)
